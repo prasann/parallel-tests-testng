@@ -1,0 +1,87 @@
+<project name="testng" default="run" basedir=".">
+
+   <property file="build.properties"/>
+
+   <property name="debug" value="true"/>
+   <property name="optimize" value="false"/>
+   <property name="build.compiler" value="javac1.5" />
+
+   <!-- dirs for test output -->
+   <property name="test.output" value="build/test-output"/>
+   <property name="test.report" value="build/test-report"/>
+
+   <taskdef resource="testngtasks" classpath="lib/testng-6.8.jar" />
+   
+   <path id="compile.cp">
+      <pathelement location="lib/testng-6.8.jar"/>
+   </path>
+
+   <target name="compile"
+           description="compile the examples"
+           depends="prepare">
+     <javac   debug="true"
+              fork="true"
+              source="1.5"
+              classpathref="compile.cp"
+              srcdir="test"
+              destdir="build/classes"
+              includeantruntime="false"
+      />
+   </target>
+
+   <target name="prepare">
+      <mkdir dir="build/classes"/>
+      <mkdir dir="${test.output}"/>
+      <mkdir dir="${test.report}"/>
+   </target>
+
+   <path id="run.cp">
+      <pathelement location="lib/testng-6.8.jar" />
+      <path refid="compile.cp"/>
+      <pathelement location="build/classes"/>
+   </path>
+
+   <target  name="run"
+            depends="compile"
+            description="run examples using testng task with just -testclass and no xml">
+      <testng classpathref="run.cp"
+               outputdir="${test.output}"
+                haltOnFailure="true">
+         <classfileset dir="build/classes" includes="**/*.class" />
+      </testng>
+      <echo>Some of these tests should have failed, see the file test.out for the details</echo>
+      <antcall target="report"/>
+   </target>
+
+   <target  name="run-parallel"
+            depends="compile"
+            description="run examples using testng task with just -testclass and no xml">
+      <testng classpathref="run.cp"
+               outputdir="${test.output}"
+               parallel="methods"
+                haltOnFailure="true">
+         <classfileset dir="build/classes" includes="**/*.class" />
+      </testng>
+      <echo>Some of these tests should have failed, see the file test.out for the details</echo>
+      <antcall target="report"/>
+   </target>
+
+   <target name="report"
+      description="generate reports using junireport">
+      <junitreport todir="${test.report}">
+         <fileset dir="${test.output}">
+            <include name="*.xml"/>
+         </fileset>
+         <report format="noframes" todir="${test.report}"/>
+      </junitreport>
+   </target>
+
+   <target  name="clean"
+            description="clean up example results">
+      <delete dir="build/classes"/>
+      <delete dir="${test.output}"/>
+      <delete dir="${test.report}"/>
+      <antcall target="prepare"/>
+   </target>
+
+</project>
